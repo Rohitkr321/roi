@@ -24,26 +24,112 @@ const masterdata = {
   },
 };
 
-// --- Navigation between steps ---
 const steps = ["step1", "step2", "step3", "step4"];
 
 function nextStep(currentStep) {
+  if (validateStep(currentStep)) {
+    document.getElementById(steps[currentStep - 1]).classList.add("hidden");
+    document.getElementById(steps[currentStep]).classList.remove("hidden");
+    toggleButtons(); // Re-evaluate button states after navigating
+  }
+}
+
+function previousStep(currentStep) {
   document.getElementById(steps[currentStep - 1]).classList.add("hidden");
-  document.getElementById(steps[currentStep]).classList.remove("hidden");
+  document.getElementById(steps[currentStep - 2]).classList.remove("hidden");
+  toggleButtons(); // Re-evaluate button states after navigating
 }
 
-function toggleNBFCInterest() {
-  const funding = document.getElementById("funding").value;
-  document.getElementById("nbfcInterestContainer").classList.toggle("hidden", funding !== "nbfc");
+function validateStep(currentStep) {
+  let isValid = true;
+  const inputs = document.querySelectorAll(`#${steps[currentStep - 1]} input, #${steps[currentStep - 1]} select`);
+
+  inputs.forEach(input => {
+    if (!input.value) {
+      input.classList.add("error");
+      isValid = false;
+    } else {
+      input.classList.remove("error");
+    }
+  });
+
+  return isValid;
 }
 
-// --- Main Calculation and Report Generation ---
+function toggleButtons() {
+  // Get the next and previous buttons by their class names
+  const nextButton = document.querySelector('.next-button');
+  const prevButton = document.querySelector('.back-button');
+
+  // Check if buttons exist before accessing their properties
+  if (nextButton && prevButton) {
+    // Disable the Next button if fields are not valid
+    nextButton.disabled = !validateStep(getCurrentStep());
+    // Always allow going back (previous step), but you can disable it based on the current step if needed
+    prevButton.disabled = getCurrentStep() === 1; // Disable the back button on the first step
+  } else {
+    console.error('Next or Back button not found');
+  }
+}
+// Function to validate the fields and toggle the "Generate Report" button
+function validateFields() {
+  const investmentAmount = document.getElementById("investmentAmount").value;
+  const pricePerAcre = document.getElementById("pricePerAcre").value;
+  const generateReportButton = document.getElementById("generateReportButton");
+
+  // Enable the button only if both fields have values
+  if (investmentAmount && pricePerAcre) {
+    generateReportButton.disabled = false;
+  } else {
+    generateReportButton.disabled = true;
+  }
+}
+
+// Add event listeners to the input fields to validate as the user types
+document.getElementById("investmentAmount").addEventListener("input", validateFields);
+document.getElementById("pricePerAcre").addEventListener("input", validateFields);
+
+// You can also call this on page load to ensure the button is initially disabled
+window.onload = function() {
+  validateFields(); // Check initial state of the form
+};
+
+function getCurrentStep() {
+  // Determine the current step by checking which section is visible
+  for (let i = 0; i < steps.length; i++) {
+    if (!document.getElementById(steps[i]).classList.contains("hidden")) {
+      return i + 1;  // Return step index (1-based)
+    }
+  }
+  return 1;  // Default to step 1 if no visible step found
+}
+
+// Automatically check and update button states when the page loads or a field changes
+window.onload = function() {
+  toggleButtons(); // Ensure buttons are in the correct state when the page loads
+};
+// Function to open the modal
+function openModal() {
+  const modal = document.getElementById('messageModal');
+  modal.style.display = "flex"; // Show the modal
+}
+
+// Function to close the modal
+function closeModal() {
+  const modal = document.getElementById('messageModal');
+  modal.style.display = "none"; // Hide the modal
+}
+
+document.getElementById("viewButton").addEventListener("click", function() {
+  openModal();
+});
+
+
 function generateReport() {
-  alert("Congratulations! You seem to be on great ground to start your profitable business.");
+  // openModal();
   document.getElementById("step4").classList.add("hidden");
   document.getElementById("report").classList.remove("hidden");
 
-  // Inputs
   const acresPerDay = parseFloat(document.getElementById("acresPerDay").value);
   const sprayDays = parseFloat(document.getElementById("sprayDays").value);
   const pricePerAcre = parseFloat(document.getElementById("pricePerAcre").value);
@@ -51,6 +137,12 @@ function generateReport() {
   const funding = document.getElementById("funding").value;
   const nbfcInterest = parseFloat(document.getElementById("nbfcInterest").value) || 0;
   const hirePilot = document.getElementById("hirePilot").value;
+
+  // Validate Inputs
+  if (isNaN(acresPerDay) || isNaN(sprayDays) || isNaN(pricePerAcre) || isNaN(investmentAmount)) {
+    alert("Please fill in all required fields correctly.");
+    return;
+  }
 
   // Determine interest rate
   let interestRate = masterdata.interestRates[funding];
