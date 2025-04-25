@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ROI Calculator - Drone Spray Business</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>ROI Calculator: Drone Spray Business</h1>
+
+    <!-- Step 1 -->
+    <section id="step1">
+      <h2>Step 1: How would you like to work with us?</h2>
+      <label><input type="radio" name="role" value="dealer"> Dealer</label><br>
+      <label><input type="radio" name="role" value="spray"> Spray Service Business</label><br>
+      <button onclick="nextStep(1)">Next</button>
+    </section>
+
+    <!-- Step 2 -->
+    <section id="step2" class="hidden">
+      <h2>Step 2: Spray Business Details</h2>
+      <label>Hire a pilot?
+        <select id="hirePilot">
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+      </label><br>
+      <label>License for:
+        <select id="licenseType">
+          <option value="self">Self</option>
+          <option value="hired">Hired Pilot</option>
+        </select>
+      </label><br>
+      <label>Drone Model:
+        <select id="droneModel">
+          <option value="krishak1i">Krishak 1i</option>
+          <option value="krishak2i">Krishak 2i</option>
+        </select>
+      </label><br>
+      <button onclick="nextStep(2)">Next</button>
+    </section>
+
+    <!-- Step 3 -->
+    <section id="step3" class="hidden">
+      <h2>Step 3: Acreage and Mapping</h2>
+      <label>Acres per day: <input type="number" id="acresPerDay"></label><br>
+      <label>Spray days per year: <input type="number" id="sprayDays"></label><br>
+      <label>Mapping device:
+        <select id="mappingDevice">
+          <option value="inbuilt">Inbuilt</option>
+          <option value="highAccuracy">High Accuracy</option>
+        </select>
+      </label><br>
+      <button onclick="nextStep(3)">Next</button>
+    </section>
+
+    <!-- Step 4 -->
+    <section id="step4" class="hidden">
+      <h2>Step 4: Financing Options</h2>
+      <label>Funding Method:
+        <select id="funding" onchange="toggleNBFCInterest()">
+          <option value="self">Self Finance</option>
+          <option value="aif">Loan under AIF</option>
+          <option value="nbfc">Loan from NBFC</option>
+        </select>
+      </label><br>
+      <div id="nbfcInterestContainer" class="hidden">
+        <label>NBFC Interest Rate (%): <input type="number" id="nbfcInterest"></label><br>
+      </div>
+      <label>Help securing loan?
+        <select id="loanHelp">
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+      </label><br>
+      <label>Investment Amount: <input type="number" id="investmentAmount"></label><br>
+      <label>Service Price (per acre): <input type="number" id="pricePerAcre"></label><br>
+      <button onclick="generateReport()">Generate Report</button>
+    </section>
+
+    <!-- Final Report -->
+    <section id="report" class="hidden">
+      <h2>Final Report</h2>
+      <div id="reportTables"></div>
+      <canvas id="pieChart" width="400" height="400"></canvas>
+      <canvas id="lineChart"></canvas>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html>
