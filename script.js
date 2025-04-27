@@ -10,18 +10,14 @@ const masterdata = {
   chargingInfrastructure: 1750 + 5000,
   logisticsAnnual: 33000,
   insuranceCost: 22425 * 1.18,
-  maintenanceCost: 0, // Editable
+  maintenanceCost: 0,
   miscellaneousCost: 1000,
   batteryCoveragePerSet: 4,
   batteryLifeCycles: 500,
   extraBatterySets: 1,
   annualAcreGrowthPercent: 25,
   servicePriceInflation: 25,
-  interestRates: {
-    self: 0,
-    aif: 6,
-    nbfc: 0,
-  },
+  interestRates: { self: 0, aif: 6, nbfc: 0 },
 };
 
 const steps = ["step1", "step2", "step3", "step4"];
@@ -30,14 +26,14 @@ function nextStep(currentStep) {
   if (validateStep(currentStep)) {
     document.getElementById(steps[currentStep - 1]).classList.add("hidden");
     document.getElementById(steps[currentStep]).classList.remove("hidden");
-    toggleButtons(); // Re-evaluate button states after navigating
+    toggleButtons();
   }
 }
 
 function previousStep(currentStep) {
   document.getElementById(steps[currentStep - 1]).classList.add("hidden");
   document.getElementById(steps[currentStep - 2]).classList.remove("hidden");
-  toggleButtons(); // Re-evaluate button states after navigating
+  toggleButtons();
 }
 
 function validateStep(currentStep) {
@@ -57,35 +53,26 @@ function validateStep(currentStep) {
 }
 
 function toggleButtons() {
-  // Get the next and previous buttons by their class names
   const nextButton = document.querySelector('.next-button');
   const prevButton = document.querySelector('.back-button');
-
-  // Check if buttons exist before accessing their properties
   if (nextButton && prevButton) {
-    // Disable the Next button if fields are not valid
     nextButton.disabled = !validateStep(getCurrentStep());
-    // Always allow going back (previous step), but you can disable it based on the current step if needed
-    prevButton.disabled = getCurrentStep() === 1; // Disable the back button on the first step
-  } else {
-    console.error('Next or Back button not found');
+    prevButton.disabled = getCurrentStep() === 1;
   }
 }
-// Function to validate the fields and toggle the "Generate Report" button
+
 function validateFields() {
   const investmentAmount = document.getElementById("investmentAmount").value;
   const pricePerAcre = document.getElementById("pricePerAcre").value;
   const generateReportButton = document.getElementById("generateReportButton");
-
-  // Enable the button only if both fields have values
-  if (investmentAmount && pricePerAcre) {
-    generateReportButton.disabled = false;
-  } else {
-    generateReportButton.disabled = true;
-  }
+  generateReportButton.disabled = !(investmentAmount && pricePerAcre);
 }
 
-// Add event listeners to the input fields to validate as the user types
+window.onload = function() {
+  validateFields();
+  toggleButtons();
+};
+
 document.getElementById("investmentAmount").addEventListener("input", validateFields);
 document.getElementById("pricePerAcre").addEventListener("input", validateFields);
 
@@ -95,13 +82,12 @@ window.onload = function() {
 };
 
 function getCurrentStep() {
-  // Determine the current step by checking which section is visible
   for (let i = 0; i < steps.length; i++) {
     if (!document.getElementById(steps[i]).classList.contains("hidden")) {
-      return i + 1;  // Return step index (1-based)
+      return i + 1;
     }
   }
-  return 1;  // Default to step 1 if no visible step found
+  return 1;
 }
 
 // Automatically check and update button states when the page loads or a field changes
@@ -126,7 +112,6 @@ document.getElementById("viewButton").addEventListener("click", function() {
 
 
 function generateReport() {
-  // openModal();
   document.getElementById("step4").classList.add("hidden");
   document.getElementById("report").classList.remove("hidden");
 
@@ -138,41 +123,27 @@ function generateReport() {
   const nbfcInterest = parseFloat(document.getElementById("nbfcInterest").value) || 0;
   const hirePilot = document.getElementById("hirePilot").value;
 
-  // Validate Inputs
   if (isNaN(acresPerDay) || isNaN(sprayDays) || isNaN(pricePerAcre) || isNaN(investmentAmount)) {
     alert("Please fill in all required fields correctly.");
     return;
   }
 
-  // Determine interest rate
   let interestRate = masterdata.interestRates[funding];
   if (funding === "nbfc") {
     interestRate = nbfcInterest;
   }
 
-  // Initial Calculations
   let totalAcresYear1 = acresPerDay * sprayDays;
-  let totalBatteryCycles = totalAcresYear1 / masterdata.batteryCoveragePerSet;
-  let batterySetsNeeded = Math.ceil(totalBatteryCycles / masterdata.batteryLifeCycles) + masterdata.extraBatterySets;
-
-  let equipmentCost = masterdata.droneCost + (batterySetsNeeded * masterdata.batterySetCost)
-    + masterdata.gnssDeviceCost + masterdata.markingSubscription + masterdata.pilotLicenseCost
-    + masterdata.chargingInfrastructure + masterdata.insuranceCost + masterdata.miscellaneousCost;
-
-  // EMI calculation (if loan taken)
+  let batterySetsNeeded = Math.ceil((totalAcresYear1 / masterdata.batteryCoveragePerSet) / masterdata.batteryLifeCycles) + masterdata.extraBatterySets;
   let principal = investmentAmount;
-  let tenureYears = 5;
-  let tenureMonths = tenureYears * 12;
+  let tenureMonths = 5 * 12;
   let monthlyInterestRate = interestRate / 1200;
-  let emi = principal * monthlyInterestRate * (Math.pow(1 + monthlyInterestRate, tenureMonths)) / (Math.pow(1 + monthlyInterestRate, tenureMonths) - 1);
-  if (funding === "self") emi = 0;
+  let emi = funding === "self" ? 0 : principal * monthlyInterestRate * (Math.pow(1 + monthlyInterestRate, tenureMonths)) / (Math.pow(1 + monthlyInterestRate, tenureMonths) - 1);
 
-  // 5 Year Cumulative Data
-  let totalRevenue = 0;
-  let totalCost = 0;
-  let totalNetIncome = 0;
-  let cumulativeAcres = 0;
+  let totalRevenue = 0, totalCost = 0, totalNetIncome = 0, cumulativeAcres = 0;
   let yearlyData = [];
+  let cumulativeIncome = 0;
+  let paybackPeriod = "N/A";
 
   let servicePrice = pricePerAcre;
   let acres = totalAcresYear1;
@@ -180,103 +151,84 @@ function generateReport() {
   for (let year = 1; year <= 5; year++) {
     let revenue = acres * servicePrice;
     let pilotSalaryAnnual = (hirePilot === "yes") ? masterdata.pilotMonthlySalary * 12 : 0;
-    let operatingCost = (acres * masterdata.laborDailyWage) + masterdata.logisticsAnnual +
-      masterdata.maintenanceCost + masterdata.miscellaneousCost + (emi * 12) + pilotSalaryAnnual;
-
-    yearlyData.push({
-      year,
-      acres,
-      revenue,
-      cost: operatingCost,
-      netIncome: revenue - operatingCost
-    });
+    let operatingCost = (acres * masterdata.laborDailyWage) + masterdata.logisticsAnnual + masterdata.maintenanceCost + masterdata.miscellaneousCost + (emi * 12) + pilotSalaryAnnual;
+    let netIncome = revenue - operatingCost;
+    yearlyData.push({ year, acres, revenue, cost: operatingCost, netIncome });
 
     totalRevenue += revenue;
     totalCost += operatingCost;
-    totalNetIncome += revenue - operatingCost;
+    totalNetIncome += netIncome;
     cumulativeAcres += acres;
+    cumulativeIncome += netIncome;
+
+    if (paybackPeriod === "N/A" && cumulativeIncome >= investmentAmount) {
+      paybackPeriod = `${year} Years`;
+    }
 
     acres *= (1 + masterdata.annualAcreGrowthPercent / 100);
     servicePrice *= (1 + masterdata.servicePriceInflation / 100);
   }
 
-  const roi = (totalNetIncome / investmentAmount) * 100;
-  const paybackPeriod = investmentAmount / (yearlyData[0].netIncome || 1);
+  const roi = ((totalNetIncome / investmentAmount) * 100).toFixed(2);
   const breakEvenYear = yearlyData.find(y => y.revenue >= investmentAmount)?.year || "N/A";
+  const totalEMIPaid = funding === "self" ? 0 : Math.round(emi * tenureMonths);
+  const totalInterestPaid = funding === "self" ? 0 : Math.round((emi * tenureMonths) - principal);
 
-  // --- Report Table HTML ---
   document.getElementById("reportTables").innerHTML = `
     <table>
       <tr><th colspan="2">Business Summary</th></tr>
-      <tr><td>Total Acres Covered</td><td>${cumulativeAcres.toFixed(0)}</td></tr>
-      <tr><td>Total Water Saved (liters)</td><td>${(cumulativeAcres * 92).toLocaleString()}</td></tr>
+      <tr><td>Total Acres Covered</td><td>${Math.round(cumulativeAcres)}</td></tr>
+      <tr><td>Total Water Saved (liters)</td><td>${Math.round(cumulativeAcres * 92).toLocaleString()}</td></tr>
       <tr><td>Battery Sets Required</td><td>${batterySetsNeeded}</td></tr>
     </table>
-
     <table>
       <tr><th colspan="2">Financial Summary</th></tr>
-      <tr><td>Cumulative Revenue</td><td>₹ ${totalRevenue.toLocaleString()}</td></tr>
-      <tr><td>Cumulative Cost</td><td>₹ ${totalCost.toLocaleString()}</td></tr>
-      <tr><td>Cumulative Net Income</td><td>₹ ${totalNetIncome.toLocaleString()}</td></tr>
-      <tr><td>Initial Investment</td><td>₹ ${investmentAmount.toLocaleString()}</td></tr>
-      <tr><td>Loan Component</td><td>₹ ${principal.toLocaleString()}</td></tr>
-      <tr><td>Total EMI Paid</td><td>₹ ${(emi * tenureMonths).toLocaleString()}</td></tr>
-      <tr><td>Total Interest Paid</td><td>₹ ${((emi * tenureMonths) - principal).toLocaleString()}</td></tr>
+      <tr><td>Cumulative Revenue</td><td>₹ ${Math.round(totalRevenue).toLocaleString()}</td></tr>
+      <tr><td>Cumulative Cost</td><td>₹ ${Math.round(totalCost).toLocaleString()}</td></tr>
+      <tr><td>Cumulative Net Income</td><td>₹ ${Math.round(totalNetIncome).toLocaleString()}</td></tr>
+      <tr><td>Initial Investment</td><td>₹ ${Math.round(investmentAmount).toLocaleString()}</td></tr>
+      <tr><td>Loan Component</td><td>₹ ${Math.round(principal).toLocaleString()}</td></tr>
+      <tr><td>Total EMI Paid</td><td>₹ ${totalEMIPaid.toLocaleString()}</td></tr>
+      <tr><td>Total Interest Paid</td><td>₹ ${totalInterestPaid.toLocaleString()}</td></tr>
     </table>
-
     <table>
       <tr><th colspan="2">ROI & Cost Metrics</th></tr>
-      <tr><td>ROI</td><td>${roi.toFixed(2)} %</td></tr>
-      <tr><td>Payback Period</td><td>${paybackPeriod.toFixed(1)} years</td></tr>
+      <tr><td>ROI</td><td>${roi} %</td></tr>
+      <tr><td>Payback Period</td><td>${paybackPeriod}</td></tr>
       <tr><td>Break-even Point</td><td>Year ${breakEvenYear}</td></tr>
     </table>
   `;
 
-  // --- PIE CHART ---
   const monthlyLabour = (masterdata.laborDailyWage * sprayDays) / 12;
-  const ctxPie = document.getElementById('pieChart').getContext('2d');
-  new Chart(ctxPie, {
+
+  new Chart(document.getElementById('pieChart').getContext('2d'), {
     type: 'pie',
     data: {
-      labels: [
-        'Labour Wages',
-        'Logistics Cost',
-        'Electricity Charges',
-        'EMI',
-        'Insurance',
-        'Maintenance',
-        'Miscellaneous'
-      ],
+      labels: ['Labour Wages', 'Logistics Cost', 'Electricity Charges', 'EMI', 'Insurance', 'Maintenance', 'Miscellaneous'],
       datasets: [{
         data: [
-          monthlyLabour,
-          masterdata.logisticsAnnual / 12,
+          Math.round(monthlyLabour),
+          Math.round(masterdata.logisticsAnnual / 12),
           1000,
-          emi,
-          masterdata.insuranceCost / 12,
-          masterdata.maintenanceCost / 12,
-          masterdata.miscellaneousCost / 12
+          Math.round(emi),
+          Math.round(masterdata.insuranceCost / 12),
+          Math.round(masterdata.maintenanceCost / 12),
+          Math.round(masterdata.miscellaneousCost / 12)
         ],
-        backgroundColor: [
-          '#3498db', '#2ecc71', '#f1c40f', '#e74c3c', '#9b59b6', '#1abc9c', '#e67e22'
-        ],
+        backgroundColor: ['#3498db', '#2ecc71', '#f1c40f', '#e74c3c', '#9b59b6', '#1abc9c', '#e67e22'],
         borderWidth: 1
       }]
     },
-    options: {
-      responsive: true
-    }
+    options: { responsive: true }
   });
 
-  // --- LINE CHART ---
-  const ctxLine = document.getElementById('lineChart').getContext('2d');
-  new Chart(ctxLine, {
+  new Chart(document.getElementById('lineChart').getContext('2d'), {
     type: 'line',
     data: {
       labels: yearlyData.map(y => `Year ${y.year}`),
       datasets: [{
         label: 'Annual Net Profit (₹)',
-        data: yearlyData.map(y => y.netIncome),
+        data: yearlyData.map(y => Math.round(y.netIncome)),
         fill: false,
         borderColor: '#2ecc71',
         tension: 0.4
@@ -284,11 +236,7 @@ function generateReport() {
     },
     options: {
       responsive: true,
-      scales: {
-        y: {
-          beginAtZero: true
-        }
-      }
+      scales: { y: { beginAtZero: true } }
     }
   });
 }
