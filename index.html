@@ -1,25 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ROI Calculator - Drone Spray Business</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
-
 <body>
   <div class="container">
     <h1>ROI Calculator</h1>
+
+    <!-- Step 1 -->
     <section id="step1">
       <h2>Step 1: How would you like to work with us?</h2>
-      <label><input type="radio" name="role" value="dealer" required> Dealer</label><br>
-      <label><input type="radio" name="role" value="spray" required checked> Spray Service Business</label><br>
+      <label><input type="radio" name="role" value="dealer"> Dealer</label><br />
+      <label><input type="radio" name="role" value="spray" checked> Spray Service Business</label><br />
       <div class="buttons-container">
-        <button class="next-button" onclick="nextStep(1)" disabled>Next</button>
+        <button class="next-button" onclick="nextStep(1)">Next</button>
       </div>
     </section>
 
+    <!-- Step 2 -->
     <section id="step2" class="hidden">
       <h2>Step 2: Spray Business Details</h2>
       <label>Hire a pilot?
@@ -27,41 +30,59 @@
           <option value="yes">Yes</option>
           <option value="no">No</option>
         </select>
-      </label><br>
+      </label><br />
       <label>License for:
         <select id="licenseType" required>
           <option value="self">Self</option>
           <option value="hired">Hired Pilot</option>
         </select>
-      </label><br>
+      </label><br />
       <label>Drone Model:
         <select id="droneModel" required>
           <option value="krishak1i">Krishak 1i</option>
           <option value="krishak2i">Krishak 2i</option>
         </select>
-      </label><br>
+      </label><br />
+      <label>How do you want to run the operations?
+        <select id="vehicleType" onchange="toggleBikeMount()" required>
+          <option value="">-- Select --</option>
+          <option value="2wheeler">2-Wheeler</option>
+          <option value="3wheeler">3-Wheeler</option>
+          <option value="4wheeler">4-Wheeler</option>
+        </select>
+      </label><br />
+      <div id="bikeMountContainer" class="hidden">
+        <label>Do you require a bike mount?
+          <select id="bikeMount">
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </label><br />
+      </div>
       <div class="buttons-container">
         <button class="next-button" onclick="nextStep(2)">Next</button>
         <button class="back-button" onclick="previousStep(2)">Back</button>
       </div>
     </section>
 
+    <!-- Step 3 -->
     <section id="step3" class="hidden">
       <h2>Step 3: Acreage and Mapping</h2>
-      <label>Acres per day: <input type="number" id="acresPerDay" required></label><br>
-      <label>Spray days per year: <input type="number" id="sprayDays" required></label><br>
+      <label>Acres per day: <input type="number" id="acresPerDay" required max="30" /></label><br />
+      <label>Spray days per year: <input type="number" id="sprayDays" required max="365" /></label><br />
       <label>Mapping device:
         <select id="mappingDevice" required>
           <option value="inbuilt">Inbuilt</option>
           <option value="highAccuracy">High Accuracy</option>
         </select>
-      </label><br>
+      </label><br />
       <div class="buttons-container">
         <button class="next-button" onclick="nextStep(3)">Next</button>
         <button class="back-button" onclick="previousStep(3)">Back</button>
       </div>
     </section>
 
+    <!-- Step 4 -->
     <section id="step4" class="hidden">
       <h2>Step 4: Financing Options</h2>
       <label>Funding Method:
@@ -70,43 +91,38 @@
           <option value="aif">Loan under AIF</option>
           <option value="nbfc">Loan from NBFC</option>
         </select>
-      </label><br>
+      </label><br />
       <div id="nbfcInterestContainer" class="hidden">
-        <label>NBFC Interest Rate (%): <input type="number" id="nbfcInterest" required></label><br>
+        <label>NBFC Interest Rate (%): <input type="number" id="nbfcInterest" /></label><br />
       </div>
-      <label>Help securing loan?
-        <select id="loanHelp" required>
+      <label id="loanHelpLabel">Help securing loan?
+        <select id="loanHelp">
           <option value="yes">Yes</option>
           <option value="no">No</option>
         </select>
-      </label><br>
-      <label>Investment Amount: <input type="number" id="investmentAmount" required></label><br>
-      <label>Service Price (per acre): <input type="number" id="pricePerAcre" required></label><br>
+      </label><br />
+      <div id="investmentField">
+        <label>Investment Amount: <input type="number" id="investmentAmount" /></label><br />
+      </div>
+      <label>Service Price (per acre): <input type="number" id="pricePerAcre" required /></label><br />
       <div class="buttons-container">
-        <button id="generateReportButton" onclick="generateReport()" disabled>Generate Report</button>
+        <button id="generateReportButton" onclick="generateReport()">Generate Report</button>
         <button class="back-button" onclick="previousStep(4)">Back</button>
       </div>
     </section>
-    <!-- <div id="messageModal" class="modal">
-      <div class="modal-content">
-        <h2>Congratulations!</h2>
-        <p>You seem to be on great ground to start your profitable business.</p>
-        <button id="viewButton" class="view-button">View Report</button>
-      </div>
-    </div> -->
-    
+
+    <!-- Final Report -->
     <section id="report" class="hidden">
       <h2>Final Report</h2>
       <div id="reportTables"></div>
       <canvas id="pieChart" width="400" height="400"></canvas>
       <canvas id="lineChart"></canvas>
-      <div class="buttons-container">
+      <div class="buttons-container exclude-pdf">
         <button onclick="window.location.reload()">Home</button>
+        <button onclick="downloadPDF()">Download PDF Report</button>
       </div>
     </section>
   </div>
   <script src="script.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
-
 </html>
