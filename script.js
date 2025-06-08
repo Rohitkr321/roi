@@ -1,14 +1,21 @@
 // --- Masterdata ---
 const masterdata = {
-  droneCost: 575000 * 1.05,
+  droneCost: 495000,
   batterySetCost: 56640,
-  gnssDeviceCost: 103250,
+  gnssDeviceCost: 77000,
   markingSubscription: 25000,
-  pilotLicenseCost: 35000,
+  pilotLicenseCost: 25000,
   pilotMonthlySalary: 20000,
+  labourwageperacre: 192,
   laborDailyWage: 500,
   chargingInfrastructure: 1750 + 5000,
   logisticsAnnual: 33000,
+  logisticCost: 13,
+  electricCharge: 3,
+  gaCloud: 2,
+  insurance: 20,
+  maintaince: 40,
+  miss: 10,
   insuranceCost: 22425 * 1.18,
   maintenanceCost: 0,
   miscellaneousCost: 1000,
@@ -18,7 +25,11 @@ const masterdata = {
   annualAcreGrowthPercent: 25,
   servicePriceInflation: 25,
   interestRates: { self: 0, aif: 6, nbfc: 0 },
-  bikeMountCost: 8500,
+  bikeMountCost: 10000,
+  threewheelerMountCost: 10000,
+  fourwheelerMountCost: 10000,
+  financePrecentage: 0.75,
+  tenureMonths: 60,
 };
 
 const steps = ["step1", "step2", "step3", "step4"];
@@ -59,13 +70,28 @@ function toggleButtons() {
     prevButton.disabled = getCurrentStep() === 1;
   }
 }
+function toggleLicenseQuestion() {
+  const licenseAvailable = document.getElementById("licenseAvailable").value;
+  const needLicenseContainer = document.getElementById("needLicenseContainer");
+
+  if (licenseAvailable === "yes") {
+    needLicenseContainer.style.display = "none";
+  } else {
+    needLicenseContainer.style.display = "block";
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  toggleLicenseQuestion();
+});
+
 
 function validateFields() {
   const funding = document.getElementById("funding").value;
-  const investmentAmount = document.getElementById("investmentAmount")?.value;
+  // const investmentAmount = document.getElementById("investmentAmount")?.value;
   const pricePerAcre = document.getElementById("pricePerAcre").value;
   const generateReportButton = document.getElementById("generateReportButton");
-  generateReportButton.disabled = (funding !== "self") && !(investmentAmount && pricePerAcre);
+  generateReportButton.disabled = (funding !== "self") && !(pricePerAcre);
 }
 
 function toggleBikeMount() {
@@ -102,10 +128,10 @@ window.onload = function () {
     if (this.value > 30) this.value = 30;
   });
   document.getElementById("sprayDays").addEventListener("input", function () {
-    if (this.value > 365) this.value = 365;
+    if (this.value > 200) this.value = 200;
   });
 
-  document.getElementById("investmentAmount")?.addEventListener("input", validateFields);
+  // document.getElementById("investmentAmount")?.addEventListener("input", validateFields);
   document.getElementById("pricePerAcre")?.addEventListener("input", validateFields);
 };
 
@@ -126,6 +152,17 @@ function generateReport() {
   const hirePilot = document.getElementById("hirePilot").value;
   const vehicleType = document.getElementById("vehicleType").value;
   const bikeMount = document.getElementById("bikeMount")?.value || "no";
+  const needLicense = document.getElementById("needLicense")?.value;
+  const highAccuracyValue = document.getElementById("mappingDevice")?.value;
+
+  console.log(acresPerDay, 'acresPerDay');
+  console.log(sprayDays, 'sprayDays');
+  console.log(pricePerAcre, 'pricePerAcre');
+  console.log(funding, 'funding');
+  console.log(nbfcInterest, 'nbfcInterest');
+  console.log(hirePilot, 'hirePilot');
+  console.log(vehicleType, 'vehicleType');
+  console.log(bikeMount, 'bikeMount');
 
   if (isNaN(acresPerDay) || isNaN(sprayDays) || isNaN(pricePerAcre)) {
     alert("Please fill in all required fields correctly.");
@@ -138,22 +175,36 @@ function generateReport() {
   }
 
   let investmentAmount = 0;
-  if (funding === "self") {
-    investmentAmount =
-      masterdata.droneCost +
-      masterdata.pilotLicenseCost +
-      masterdata.chargingInfrastructure +
-      masterdata.insuranceCost;
-
-    if (vehicleType === "2wheeler" && bikeMount === "yes") {
-      investmentAmount += masterdata.bikeMountCost;
-    }
-  } else {
-    investmentAmount = parseFloat(document.getElementById("investmentAmount").value);
-  }
+  // if (funding === "self") {
+  investmentAmount = masterdata.droneCost;
+  console.log(investmentAmount, 'Default')
   if (vehicleType === "2wheeler" && bikeMount === "yes") {
     investmentAmount += masterdata.bikeMountCost;
+    console.log(investmentAmount, 'after vehicleType')
   }
+  if (vehicleType === "3wheeler" && bikeMount === "yes") {
+    investmentAmount += masterdata.threewheelerMountCost;
+    console.log(investmentAmount, 'after vehicleType')
+  }
+  if (vehicleType === "4wheeler" && bikeMount === "yes") {
+    investmentAmount += masterdata.fourwheelerMountCost;
+    console.log(investmentAmount, 'after vehicleType')
+  }
+  if (needLicense == 'No') {
+    console.log('needLicense')
+    investmentAmount = investmentAmount + masterdata.pilotLicenseCost
+    console.log(investmentAmount, 'after needLicense')
+  };
+  if (highAccuracyValue == 'highAccuracy') {
+    investmentAmount = investmentAmount + masterdata.gnssDeviceCost
+    console.log(investmentAmount, 'After highAccuracyValue')
+  };
+  // } else {
+  //   investmentAmount = parseFloat(document.getElementById("investmentAmount").value);
+  // }
+  // if (vehicleType === "2wheeler" && bikeMount === "yes") {
+  //   investmentAmount += masterdata.bikeMountCost;
+  // }
 
 
   let interestRate = masterdata.interestRates[funding];
@@ -173,36 +224,54 @@ function generateReport() {
   let acres = totalAcresYear1;
 
   const depreciationPerYear = (
-  masterdata.droneCost +
-  masterdata.batterySetCost +
-  masterdata.chargingInfrastructure +
-  masterdata.insuranceCost
-) / 5;
+    masterdata.droneCost +
+    masterdata.batterySetCost +
+    masterdata.chargingInfrastructure +
+    masterdata.insuranceCost
+  ) / 5;
 
-for (let year = 1; year <= 5; year++) {
-  let revenue = acres * servicePrice;
-  let pilotSalaryAnnual = (hirePilot === "yes") ? masterdata.pilotMonthlySalary * 12 : 0;
-  let operatingCost = (acres * masterdata.laborDailyWage) + masterdata.logisticsAnnual + masterdata.maintenanceCost + masterdata.miscellaneousCost + (emi * 12) + pilotSalaryAnnual + depreciationPerYear;
-    let netIncome = revenue - operatingCost;
-    yearlyData.push({ year, acres, revenue, cost: operatingCost, netIncome });
+  for (let year = 1; year <= 5; year++) {
+    let revenue = Math.round(acres) * servicePrice;
+    let acrePerday = Math.round(acres) / sprayDays;
+    let pilotSalaryAnnual = (hirePilot === "yes") ? masterdata.pilotMonthlySalary * 12 : 0;
+    let peraAcreCost = ((masterdata.labourwageperacre / acrePerday) * acresPerDay);
+    let logisticsPerAcreCost = ((masterdata.logisticCost / acrePerday) * acresPerDay);
+    let electricPerAcreCost = ((masterdata.electricCharge / acrePerday) * acresPerDay);
+    let gaCloudPerAcreCost = masterdata.gaCloud;
+    let insurance = ((masterdata.insurance / acrePerday) * acresPerDay);
+    let maintaince = ((masterdata.maintaince / acrePerday) * acresPerDay);
+    let miss = ((masterdata.miss / acrePerday) * acresPerDay);
+    // let loanIntresetPerAcreCost = (( masterdata.loanIntresetPerAcreCost / acrePerday)*acresPerDay);
+    // let logisticsPerAcreCost = (( masterdata.logisticCost / acrePerday)*acresPerDay);
+    let lowOperatingCost = (peraAcreCost + logisticsPerAcreCost + electricPerAcreCost + gaCloudPerAcreCost + insurance + maintaince + miss) * Math.round(acres);
+    let operatingCost = (acres * masterdata.laborDailyWage) + masterdata.logisticsAnnual + masterdata.maintenanceCost + masterdata.miscellaneousCost + (emi * 12) + pilotSalaryAnnual + depreciationPerYear;
+    let netIncome = revenue - lowOperatingCost;
+    yearlyData.push({ year, acres, revenue, cost: lowOperatingCost, netIncome });
 
     totalRevenue += revenue;
-    totalCost += operatingCost;
+    totalCost += lowOperatingCost;
     totalNetIncome += netIncome;
     cumulativeAcres += acres;
     cumulativeIncome += netIncome;
-
+    console.log(totalRevenue, 'totalRevenue');
     if (paybackPeriod === "N/A" && cumulativeIncome >= investmentAmount) {
+      console.log(investmentAmount, 'investmentAmount cumulativeIncome')
       paybackPeriod = `${year} Years`;
     }
-
+    console.log(investmentAmount, 'investmentAmount paybackPeriod');
     acres *= (1 + masterdata.annualAcreGrowthPercent / 100);
-    servicePrice *= (1 + masterdata.servicePriceInflation / 100);
+    // servicePrice *= (1 + masterdata.servicePriceInflation / 100);
   }
 
   let batterySetsNeeded = Math.ceil((cumulativeAcres / masterdata.batteryCoveragePerSet) / masterdata.batteryLifeCycles) + masterdata.extraBatterySets;
-
+  console.log(batterySetsNeeded, 'batterySetsNeeded');
+  investmentAmount = investmentAmount + (batterySetsNeeded * masterdata.batterySetCost);
+  console.log(investmentAmount, 'investmentAmount');
   let roi = ((totalNetIncome / investmentAmount) * 100).toFixed(2);
+  let loanAmout = investmentAmount * masterdata.financePrecentage;
+  let emiPerMonth = funding === "self" ? 0 : loanAmout * monthlyInterestRate * (Math.pow(1 + monthlyInterestRate, tenureMonths)) / (Math.pow(1 + monthlyInterestRate, tenureMonths) - 1);
+  let totalIntreset = emiPerMonth * tenureMonths - loanAmout;
+  let equatedIntresetPerYear = totalIntreset / tenureMonths * 12
 
   const breakEvenYearObj = yearlyData.find(y => Math.round(y.revenue - y.cost) >= investmentAmount);
   const breakEvenYear = breakEvenYearObj ? breakEvenYearObj.year : "N/A";
@@ -214,6 +283,7 @@ for (let year = 1; year <= 5; year++) {
 <table>
   <tr><th colspan="2">Business Summary</th></tr>
   <tr><td>Total Acres Covered</td><td>${Math.round(cumulativeAcres)}</td></tr>
+  <tr><td>Capital Cost</td><td>${Math.round(investmentAmount)}</td></tr>
   <tr><td>Total Water Saved (liters)</td><td>${Math.round(cumulativeAcres * 92).toLocaleString()}</td></tr>
   <tr><td>Battery Sets Required</td><td>${batterySetsNeeded}</td></tr>
 </table>
@@ -222,10 +292,11 @@ for (let year = 1; year <= 5; year++) {
   <tr><td>Cumulative Revenue</td><td>₹ ${Math.round(totalRevenue).toLocaleString()}</td></tr>
   <tr><td>Cumulative Cost</td><td>₹ ${Math.round(totalCost).toLocaleString()}</td></tr>
   <tr><td>Cumulative Net Income</td><td>₹ ${Math.round(totalNetIncome).toLocaleString()}</td></tr>
-  <tr><td>Initial Investment</td><td>₹ ${Math.round(investmentAmount).toLocaleString()}</td></tr>
+  <tr><td>Loan Amount</td><td>₹ ${Math.round(loanAmout).toLocaleString()}</td></tr>
   <tr><td>Loan Component</td><td>₹ ${Math.round(principal).toLocaleString()}</td></tr>
-  <tr><td>Total EMI Paid</td><td>₹ ${totalEMIPaid.toLocaleString()}</td></tr>
-  <tr><td>Total Interest Paid</td><td>₹ ${totalInterestPaid.toLocaleString()}</td></tr>
+  <tr><td>Total EMI Per Month</td><td>₹ ${emiPerMonth.toLocaleString()}</td></tr>
+  <tr><td>Total Intreset</td><td>₹ ${totalIntreset.toLocaleString()}</td></tr>
+   <tr><td>Equated Intreset Per Year</td><td>₹ ${equatedIntresetPerYear.toLocaleString()}</td></tr>
 </table>
 <table>
   <tr><th colspan="2">ROI & Cost Metrics</th></tr>

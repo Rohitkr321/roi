@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,6 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
+
 <body>
   <div class="container">
     <h1>ROI Calculator</h1>
@@ -25,24 +27,37 @@
     <!-- Step 2 -->
     <section id="step2" class="hidden">
       <h2>Step 2: Spray Business Details</h2>
+
       <label>Hire a pilot?
         <select id="hirePilot" required>
           <option value="yes">Yes</option>
           <option value="no">No</option>
         </select>
       </label><br />
-      <label>License for:
-        <select id="licenseType" required>
-          <option value="self">Self</option>
-          <option value="hired">Hired Pilot</option>
+
+      <label>License Available?
+        <select id="licenseAvailable" required onchange="toggleLicenseQuestion()">
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
         </select>
       </label><br />
+
+      <div id="needLicenseContainer">
+        <label>Do you Need a License?
+          <select id="needLicense" required>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+          </select>
+        </label><br />
+      </div>
+
       <label>Drone Model:
         <select id="droneModel" required>
           <option value="krishak1i">Krishak 1i</option>
           <option value="krishak2i">Krishak 2i</option>
         </select>
       </label><br />
+
       <label>How do you want to run the operations?
         <select id="vehicleType" onchange="toggleBikeMount()" required>
           <option value="">-- Select --</option>
@@ -51,6 +66,7 @@
           <option value="4wheeler">4-Wheeler</option>
         </select>
       </label><br />
+
       <div id="bikeMountContainer" class="hidden">
         <label>Do you require a bike mount?
           <select id="bikeMount">
@@ -59,11 +75,13 @@
           </select>
         </label><br />
       </div>
+
       <div class="buttons-container">
         <button class="next-button" onclick="nextStep(2)">Next</button>
         <button class="back-button" onclick="previousStep(2)">Back</button>
       </div>
     </section>
+
 
     <!-- Step 3 -->
     <section id="step3" class="hidden">
@@ -102,7 +120,7 @@
         </select>
       </label><br />
       <div id="investmentField">
-        <label>Investment Amount: <input type="number" id="investmentAmount" /></label><br />
+        <!-- <label>Investment Amount: <input type="number" id="investmentAmount" /></label><br /> -->
       </div>
       <label>Service Price (per acre): <input type="number" id="pricePerAcre" required /></label><br />
       <div class="buttons-container">
@@ -125,4 +143,5 @@
   </div>
   <script src="script.js"></script>
 </body>
+
 </html>
