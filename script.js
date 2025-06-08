@@ -155,15 +155,6 @@ function generateReport() {
   const needLicense = document.getElementById("needLicense")?.value;
   const highAccuracyValue = document.getElementById("mappingDevice")?.value;
 
-  console.log(acresPerDay, 'acresPerDay');
-  console.log(sprayDays, 'sprayDays');
-  console.log(pricePerAcre, 'pricePerAcre');
-  console.log(funding, 'funding');
-  console.log(nbfcInterest, 'nbfcInterest');
-  console.log(hirePilot, 'hirePilot');
-  console.log(vehicleType, 'vehicleType');
-  console.log(bikeMount, 'bikeMount');
-
   if (isNaN(acresPerDay) || isNaN(sprayDays) || isNaN(pricePerAcre)) {
     alert("Please fill in all required fields correctly.");
     return;
@@ -253,20 +244,14 @@ function generateReport() {
     totalNetIncome += netIncome;
     cumulativeAcres += acres;
     cumulativeIncome += netIncome;
-    console.log(totalRevenue, 'totalRevenue');
     if (paybackPeriod === "N/A" && cumulativeIncome >= investmentAmount) {
-      console.log(investmentAmount, 'investmentAmount cumulativeIncome')
       paybackPeriod = `${year} Years`;
     }
-    console.log(investmentAmount, 'investmentAmount paybackPeriod');
     acres *= (1 + masterdata.annualAcreGrowthPercent / 100);
-    // servicePrice *= (1 + masterdata.servicePriceInflation / 100);
   }
 
   let batterySetsNeeded = Math.ceil((cumulativeAcres / masterdata.batteryCoveragePerSet) / masterdata.batteryLifeCycles) + masterdata.extraBatterySets;
-  console.log(batterySetsNeeded, 'batterySetsNeeded');
   investmentAmount = investmentAmount + (batterySetsNeeded * masterdata.batterySetCost);
-  console.log(investmentAmount, 'investmentAmount');
   let roi = ((totalNetIncome / investmentAmount) * 100).toFixed(2);
   let loanAmout = investmentAmount * masterdata.financePrecentage;
   let emiPerMonth = funding === "self" ? 0 : loanAmout * monthlyInterestRate * (Math.pow(1 + monthlyInterestRate, tenureMonths)) / (Math.pow(1 + monthlyInterestRate, tenureMonths) - 1);
@@ -277,7 +262,13 @@ function generateReport() {
   const breakEvenYear = breakEvenYearObj ? breakEvenYearObj.year : "N/A";
   const totalEMIPaid = funding === "self" ? 0 : Math.round(emi * tenureMonths);
   const totalInterestPaid = funding === "self" ? 0 : Math.round((emi * tenureMonths) - principal);
-
+  if (funding !== 'self') {
+    yearlyData.map( y => {
+      let acre_per_days = Math.round(y.acres) / sprayDays;
+      let intresetrate = (totalIntreset/y.acres/acre_per_days)*acresPerDay;
+      y.cost = y.cost + intresetrate;
+    })
+  }
   const reportTables = document.getElementById("reportTables");
   reportTables.innerHTML = `
 <table>
@@ -289,9 +280,6 @@ function generateReport() {
 </table>
 <table>
   <tr><th colspan="2">Financial Summary</th></tr>
-  <tr><td>Cumulative Revenue</td><td>₹ ${Math.round(totalRevenue).toLocaleString()}</td></tr>
-  <tr><td>Cumulative Cost</td><td>₹ ${Math.round(totalCost).toLocaleString()}</td></tr>
-  <tr><td>Cumulative Net Income</td><td>₹ ${Math.round(totalNetIncome).toLocaleString()}</td></tr>
   <tr><td>Loan Amount</td><td>₹ ${Math.round(loanAmout).toLocaleString()}</td></tr>
   <tr><td>Loan Component</td><td>₹ ${Math.round(principal).toLocaleString()}</td></tr>
   <tr><td>Total EMI Per Month</td><td>₹ ${emiPerMonth.toLocaleString()}</td></tr>
