@@ -238,17 +238,10 @@ function generateReport() {
     let operatingCost = (acres * masterdata.laborDailyWage) + masterdata.logisticsAnnual + masterdata.maintenanceCost + masterdata.miscellaneousCost + (emi * 12) + pilotSalaryAnnual + depreciationPerYear;
     let netIncome = revenue - lowOperatingCost;
     let returnOfInvestement = netIncome/revenue
-    console.log(returnOfInvestement, 'returnOfInvestement');
-    console.log(Math.round(acres), 'Math.round(acres)')
-    console.log(peraAcreCost, 'Math.peraAcreCost(acres)')
     let totalCostForROI = Math.round(acres)*peraAcreCost;
-    let totalRevenueROI = peraAcreCost*servicePrice;
+    let totalRevenueROI = Math.round(acres)*servicePrice;
     let incomeROI = totalRevenueROI - totalCostForROI;
     let return_on_investemnt =( incomeROI/totalCostForROI)*100;
-    console.log(totalCostForROI, 'totalCostForROI');
-    console.log(totalRevenueROI, 'totalRevenueROI');
-    console.log(incomeROI, 'incomeROI');
-    console.log(return_on_investemnt, 'return_on_investemnt');
     yearlyData.push({ year, acres, revenue, cost: lowOperatingCost, netIncome, roi: Number(return_on_investemnt.toFixed(2)) });
 
     totalRevenue += revenue;
