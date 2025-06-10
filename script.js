@@ -232,8 +232,6 @@ function generateReport() {
     let insurance = ((masterdata.insurance / acrePerday) * acresPerDay);
     let maintaince = ((masterdata.maintaince / acrePerday) * acresPerDay);
     let miss = ((masterdata.miss / acrePerday) * acresPerDay);
-    // let loanIntresetPerAcreCost = (( masterdata.loanIntresetPerAcreCost / acrePerday)*acresPerDay);
-    // let logisticsPerAcreCost = (( masterdata.logisticCost / acrePerday)*acresPerDay);
     let lowOperatingCost = (peraAcreCost + logisticsPerAcreCost + electricPerAcreCost + gaCloudPerAcreCost + insurance + maintaince + miss) * Math.round(acres);
     let operatingCost = (acres * masterdata.laborDailyWage) + masterdata.logisticsAnnual + masterdata.maintenanceCost + masterdata.miscellaneousCost + (emi * 12) + pilotSalaryAnnual + depreciationPerYear;
     let netIncome = revenue - lowOperatingCost;
@@ -274,6 +272,11 @@ function generateReport() {
       y.cost = y.cost + intresetrate;
     })
   }
+  yearlyData.map(y => {
+      let anualDeprication = investmentAmount/5;
+      let depreciationPerAcre = anualDeprication/y.acres;
+      y.cost = y.cost + depreciationPerAcre;
+    })
   const reportTables = document.getElementById("reportTables");
   let html = `<table>
   <tr><th colspan="2">Business Summary</th></tr>
@@ -302,7 +305,7 @@ function generateReport() {
       <td>₹ ${Math.round(y.revenue).toLocaleString()}</td>
       <td>₹ ${Math.round(y.cost).toLocaleString()}</td>
       <td>₹ ${Math.round(y.netIncome).toLocaleString()}</td>
-      <td>₹ ${Math.round(y.roi).toLocaleString()}</td>
+      <td>% ${Math.round(y.roi).toLocaleString()}</td>
     </tr>
   `).join('');
 
