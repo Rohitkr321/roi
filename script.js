@@ -202,7 +202,7 @@ function generateReport() {
   if (funding === "nbfc") {
     interestRate = nbfcInterest;
   }
-
+ 
   let totalAcresYear1 = acresPerDay * sprayDays;
   let principal = investmentAmount;
   let tenureMonths = 5 * 12;
@@ -222,7 +222,7 @@ function generateReport() {
   ) / 5;
 
   for (let year = 1; year <= 5; year++) {
-    let revenue = Math.round(acres) * servicePrice;
+    let revenue = Math.round(acres)* servicePrice;
     let acrePerday = Math.round(acres) / sprayDays;
     let pilotSalaryAnnual = (hirePilot === "yes") ? masterdata.pilotMonthlySalary * 12 : 0;
     let peraAcreCost = ((masterdata.labourwageperacre / acrePerday) * acresPerDay);
@@ -237,7 +237,19 @@ function generateReport() {
     let lowOperatingCost = (peraAcreCost + logisticsPerAcreCost + electricPerAcreCost + gaCloudPerAcreCost + insurance + maintaince + miss) * Math.round(acres);
     let operatingCost = (acres * masterdata.laborDailyWage) + masterdata.logisticsAnnual + masterdata.maintenanceCost + masterdata.miscellaneousCost + (emi * 12) + pilotSalaryAnnual + depreciationPerYear;
     let netIncome = revenue - lowOperatingCost;
-    yearlyData.push({ year, acres, revenue, cost: lowOperatingCost, netIncome });
+    let returnOfInvestement = netIncome/revenue
+    console.log(returnOfInvestement, 'returnOfInvestement');
+    console.log(Math.round(acres), 'Math.round(acres)')
+    console.log(peraAcreCost, 'Math.peraAcreCost(acres)')
+    let totalCostForROI = Math.round(acres)*peraAcreCost;
+    let totalRevenueROI = peraAcreCost*servicePrice;
+    let incomeROI = totalRevenueROI - totalCostForROI;
+    let return_on_investemnt =( incomeROI/totalCostForROI)*100;
+    console.log(totalCostForROI, 'totalCostForROI');
+    console.log(totalRevenueROI, 'totalRevenueROI');
+    console.log(incomeROI, 'incomeROI');
+    console.log(return_on_investemnt, 'return_on_investemnt');
+    yearlyData.push({ year, acres, revenue, cost: lowOperatingCost, netIncome, roi: Number(return_on_investemnt.toFixed(2)) });
 
     totalRevenue += revenue;
     totalCost += lowOperatingCost;
@@ -263,36 +275,32 @@ function generateReport() {
   const totalEMIPaid = funding === "self" ? 0 : Math.round(emi * tenureMonths);
   const totalInterestPaid = funding === "self" ? 0 : Math.round((emi * tenureMonths) - principal);
   if (funding !== 'self') {
-    yearlyData.map( y => {
+    yearlyData.map(y => {
       let acre_per_days = Math.round(y.acres) / sprayDays;
-      let intresetrate = (totalIntreset/y.acres/acre_per_days)*acresPerDay;
+      let intresetrate = (totalIntreset / y.acres / acre_per_days) * acresPerDay;
       y.cost = y.cost + intresetrate;
     })
   }
   const reportTables = document.getElementById("reportTables");
-  reportTables.innerHTML = `
-<table>
+  let html = `<table>
   <tr><th colspan="2">Business Summary</th></tr>
   <tr><td>Total Acres Covered</td><td>${Math.round(cumulativeAcres)}</td></tr>
   <tr><td>Capital Cost</td><td>${Math.round(investmentAmount)}</td></tr>
   <tr><td>Total Water Saved (liters)</td><td>${Math.round(cumulativeAcres * 92).toLocaleString()}</td></tr>
   <tr><td>Battery Sets Required</td><td>${batterySetsNeeded}</td></tr>
-</table>
-<table>
+</table>`
+  if (funding !== 'self') {
+    html += `<table>
   <tr><th colspan="2">Financial Summary</th></tr>
   <tr><td>Loan Amount</td><td>₹ ${Math.round(loanAmout).toLocaleString()}</td></tr>
   <tr><td>Loan Component</td><td>₹ ${Math.round(principal).toLocaleString()}</td></tr>
   <tr><td>Total EMI Per Month</td><td>₹ ${emiPerMonth.toLocaleString()}</td></tr>
   <tr><td>Total Intreset</td><td>₹ ${totalIntreset.toLocaleString()}</td></tr>
    <tr><td>Equated Intreset Per Year</td><td>₹ ${equatedIntresetPerYear.toLocaleString()}</td></tr>
-</table>
-<table>
-  <tr><th colspan="2">ROI & Cost Metrics</th></tr>
-  <tr><td>ROI</td><td>${roi} %</td></tr>
-  <tr><td>Payback Period</td><td>${paybackPeriod}</td></tr>
-  <tr><td>Break-even Point</td><td>Year ${breakEvenYear}</td></tr>
-</table>
-  `;
+   <tr><td>Payback Period</td><td>60 Months</td></tr>
+</table>`
+  }
+  reportTables.innerHTML = html;
 
   let breakdownRows = yearlyData.map(y => `
     <tr>
@@ -301,18 +309,20 @@ function generateReport() {
       <td>₹ ${Math.round(y.revenue).toLocaleString()}</td>
       <td>₹ ${Math.round(y.cost).toLocaleString()}</td>
       <td>₹ ${Math.round(y.netIncome).toLocaleString()}</td>
+      <td>₹ ${Math.round(y.roi).toLocaleString()}</td>
     </tr>
   `).join('');
 
   reportTables.innerHTML += `
     <table>
-      <tr><th colspan="5">5-Year Financial Breakdown</th></tr>
+      <tr><th colspan="6">5-Year Financial Breakdown</th></tr>
       <tr>
         <th>Year</th>
         <th>Acres</th>
         <th>Revenue (₹)</th>
         <th>Cost (₹)</th>
         <th>Net Income (₹)</th>
+        <th>ROI (%)</th>
       </tr>
       ${breakdownRows}
     </table>
